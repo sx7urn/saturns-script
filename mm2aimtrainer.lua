@@ -12,8 +12,8 @@ local Window = Rayfield:CreateWindow({
 
    ConfigurationSaving = {
       Enabled = true,
-      FolderName = nil, -- Create a custom folder for your hub/game
-      FileName = "what"
+      FolderName = "mm2aimtrainer", -- Create a custom folder for your hub/game
+      FileName = "saveconfig"
    },
 
    Discord = {
