@@ -26,7 +26,7 @@ local Window = Rayfield:CreateWindow({
    KeySettings = {
       Title = "Key System",
       Subtitle = "MM2 Aim Trainer",
-      Note = "Solar Hub Key: mm2aimtrainerbeta:3", -- Use this to tell the user how to get a key
+      Note = "Key: mm2aimtrainerbeta:3", -- Use this to tell the user how to get a key
       FileName = "Key", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
       SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
       GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
@@ -67,56 +67,80 @@ local BotParagraph = BotTab:CreateParagraph({Title = "Note", Content = "To chang
 
 local BotSection = BotTab:CreateSection("Combat")
 
+local player = game:GetService("Players").LocalPlayer
+
+-- Button creation
 local Button = BotTab:CreateButton({
-   Name = "Kill NPC(s)",
-   Callback = function()
-   -- The command function to teleport to parts named "HumanoidRootPart"
-local function teleportToInnoParts()
-    local partName = "HumanoidRootPart" -- We are looking for parts named "HumanoidRootPart"
-    local partsToTeleport = {}  -- Store the parts that match the name
+    Name = "Kill NPC(s)",
+    Callback = function()
+        local function teleportToInnoParts()
+            local partName = "HumanoidRootPart"
+            local partsToTeleport = {}
 
-    -- Collect all parts named "HumanoidRootPart"
-    for _, v in pairs(workspace:GetDescendants()) do
-        if v.Name:lower() == partName:lower() and v:IsA("BasePart") then
-            table.insert(partsToTeleport, v)
-        end
-    end
+            -- Collect all "HumanoidRootPart" from NPCs in the workspace
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v.Name:lower() == partName:lower() and v:IsA("BasePart") then
+                    table.insert(partsToTeleport, v)
+                end
+            end
 
-    -- If no parts are found, notify the user
-    if #partsToTeleport == 0 then
-        player:SendNotification({Title = "Error", Text = "No parts named 'HumanoidRootPart' found!"})
-        return
-    end
+            if #partsToTeleport == 0 then
+                player:SendNotification({Title = "Error", Text = "No parts named 'HumanoidRootPart' found!"})
+                return
+            end
 
-    -- Check if the player is seated and stand them up if needed
-    local humanoid = player.Character and player.Character:FindFirstChildOfClass('Humanoid')
-    if humanoid and humanoid.SeatPart then
-        humanoid.Sit = false
-        wait(0.1)  -- Short wait to allow the player to stand
-    end
+            -- Ensure the player isn't seated
+            local humanoid = player.Character and player.Character:FindFirstChildOfClass('Humanoid')
+            if humanoid and humanoid.SeatPart then
+                humanoid.Sit = false
+                task.wait(0.1)
+            end
 
-    -- Start an infinite loop to teleport the player continuously
-    while true do
-        for _, part in pairs(partsToTeleport) do
-            wait(0.1)  -- Wait before teleporting to the next part
-            local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            if root then
-                root.CFrame = part.CFrame
+            -- Continuous teleporting to NPCs
+            for _, part in pairs(partsToTeleport) do
+                task.wait(0.1)
+                local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    root.CFrame = part.CFrame
+                end
             end
         end
-    end
-end
 
--- The function that fires the server event before teleporting
-local function fireServerEvent()
-    while true do
-        local args = {
-            [1] = 1
-        }
+        -- Server event firing
+        local function fireServerEvent()
+            -- Retrieve the equipped knife value dynamically
+            local equippedKnifeName = player:FindFirstChild("EquippedKnife") and player.EquippedKnife.Value
+            if not equippedKnifeName then
+                warn("EquippedKnife StringValue not found or has no value!")
+                return
+            end
+            
+            local knife = player.Character:FindFirstChild(equippedKnifeName)
+            if not knife then
+                warn("Knife tool not found in character!")
+                return
+            end
+            
+            local knifeServer = knife:FindFirstChild("KnifeServer")
+            if knifeServer and knifeServer:FindFirstChild("SlashStart") then
+                while true do
+                    local args = {[1] = 1}
 
-        game:GetService("Players").LocalPlayer.Character.Knife.KnifeServer.SlashStart:FireServer(unpack(args))
-        wait(0.1)
-    end
-         end
-   end,
+                    local success, err = pcall(function()
+                        knifeServer.SlashStart:FireServer(unpack(args))
+                    end)
+                    if not success then
+                        warn("Error firing server event: " .. tostring(err))
+                    end
+                    task.wait(0.1)
+                end
+            else
+                warn("KnifeServer or SlashStart event not found in knife!")
+            end
+        end
+
+        -- Run both functions
+        task.spawn(teleportToInnoParts)
+        task.spawn(fireServerEvent)
+    end,
 })
