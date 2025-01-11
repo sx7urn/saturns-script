@@ -67,11 +67,26 @@ local BotParagraph = BotTab:CreateParagraph({Title = "Note", Content = "To chang
 local BotSection = BotTab:CreateSection("Combat")
 
 local player = game:GetService("Players").LocalPlayer
+local teleporting = false  -- Track whether teleporting is active
 
 -- Button creation
 local Button = BotTab:CreateButton({
     Name = "Kill NPC(s)",
     Callback = function()
+        if teleporting then
+            Rayfield:Notify({
+                Title = "Already Teleporting",
+                Content = "You are already teleporting to NPCs!",
+                Duration = 6.5,
+                Image = "rewind",
+            })
+            return
+        end
+
+        -- Set teleporting to true to prevent multiple clicks
+        teleporting = true
+
+        -- Teleport function
         local function teleportToInnoParts()
             local partName = "HumanoidRootPart"
             local partsToTeleport = {}
@@ -84,7 +99,13 @@ local Button = BotTab:CreateButton({
             end
 
             if #partsToTeleport == 0 then
-                player:SendNotification({Title = "Error", Text = "No parts named 'HumanoidRootPart' found!"})
+                Rayfield:Notify({
+                    Title = "Error",
+                    Content = "No parts named 'HumanoidRootPart' found!",
+                    Duration = 6.5,
+                    Image = "rewind",
+                })
+                teleporting = false
                 return
             end
 
@@ -96,13 +117,25 @@ local Button = BotTab:CreateButton({
             end
 
             -- Continuous teleporting to NPCs
-            for _, part in pairs(partsToTeleport) do
+            while #partsToTeleport > 0 and teleporting do
                 task.wait(0.1)
                 local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                 if root then
-                    root.CFrame = part.CFrame
+                    root.CFrame = partsToTeleport[1].CFrame  -- Teleport to the first part
+                    table.remove(partsToTeleport, 1)  -- Remove the teleported part
                 end
             end
+
+            -- End teleporting when all parts are done
+            if #partsToTeleport == 0 then
+                Rayfield:Notify({
+                    Title = "Teleport Complete",
+                    Content = "All NPCs have been teleported to.",
+                    Duration = 6.5,
+                    Image = "rewind",
+                })
+            end
+            teleporting = false
         end
 
         -- Server event firing
@@ -110,41 +143,57 @@ local Button = BotTab:CreateButton({
             -- Retrieve the equipped knife value dynamically
             local equippedKnifeName = player:FindFirstChild("EquippedKnife") and player.EquippedKnife.Value
             if not equippedKnifeName then
-                warn("EquippedKnife StringValue not found or has no value!")
+                Rayfield:Notify({
+                    Title = "Error",
+                    Content = "EquippedKnife StringValue not found or has no value!",
+                    Duration = 6.5,
+                    Image = "rewind",
+                })
+                teleporting = false
                 return
             end
             
             local knife = player.Character:FindFirstChild(equippedKnifeName)
             if not knife then
-                warn("Knife tool not found in character!")
+                Rayfield:Notify({
+                    Title = "Error",
+                    Content = "Knife tool not found in character!",
+                    Duration = 6.5,
+                    Image = "rewind",
+                })
+                teleporting = false
                 return
             end
             
             local knifeServer = knife:FindFirstChild("KnifeServer")
             if knifeServer and knifeServer:FindFirstChild("SlashStart") then
-                while true do
+                while teleporting do
                     local args = {[1] = 1}
-
                     local success, err = pcall(function()
                         knifeServer.SlashStart:FireServer(unpack(args))
                     end)
                     if not success then
-                        Rayfield:Notify(
-                        Title = "Error",
-                        Content = "Error firing server event: " .. tostring(err),
-                        Duration = 6.5,
-                        Image = "triangle-alert",
-                     })
+                        Rayfield:Notify({
+                            Title = "Error",
+                            Content = "Error firing server event: " .. tostring(err),
+                            Duration = 6.5,
+                            Image = "rewind",
+                        })
                     end
                     task.wait(0.1)
                 end
             else
                 Rayfield:Notify({
-   Title = "KnifeServer or SlashStart not found.",
-   Content = "KnifeServer or SlashStart event not found in knife!",
-   Duration = 6.5,
-   Image = "triangle-alert",
-                  
+                    Title = "KnifeServer or SlashStart not found.",
+                    Content = "KnifeServer or SlashStart event not found in knife!",
+                    Duration = 6.5,
+                    Image = "rewind",
+                })
+                teleporting = false
+            end
+        end
+
+        -- Run both functions
         task.spawn(teleportToInnoParts)
         task.spawn(fireServerEvent)
     end,
