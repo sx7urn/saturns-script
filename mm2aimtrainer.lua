@@ -130,13 +130,22 @@ local Button = BotTab:CreateButton({
                         knifeServer.SlashStart:FireServer(unpack(args))
                     end)
                     if not success then
-                        warn("Error firing server event: " .. tostring(err))
+                        Rayfield:Notify(
+                        Title = "Error",
+                        Content = "Error firing server event: " .. tostring(err),
+                        Duration = 6.5,
+                        Image = "triangle-alert",
+                     })
                     end
                     task.wait(0.1)
                 end
             else
-                warn("KnifeServer or SlashStart event not found in knife!")
-            end
+                Rayfield:Notify({
+   Title = "KnifeServer or SlashStart not found.",
+   Content = "KnifeServer or SlashStart event not found in knife!",
+   Duration = 6.5,
+   Image = "triangle-alert",
+})
         end
 
         -- Run both functions
