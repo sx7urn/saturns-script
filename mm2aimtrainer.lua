@@ -35,9 +35,9 @@ local Window = Rayfield:CreateWindow({
 })
 
 local PlayerTab = Window:CreateTab("Player", "user") -- Title, Image
-local Section = PlayerTab:CreateSection("Player")
+local PlayerSection = PlayerTab:CreateSection("Player")
 
-local Input = PlayerTab:CreateInput({
+local PlayerInput = PlayerTab:CreateInput({
    Name = "Walk Speed",
    CurrentValue = "16",
    PlaceholderText = "WalkSpeed",
@@ -48,7 +48,7 @@ local Input = PlayerTab:CreateInput({
    end,
 })
 
-local Input = PlayerTab:CreateInput({
+local PlayerInput = PlayerTab:CreateInput({
    Name = "Jump Power",
    CurrentValue = "50",
    PlaceholderText = "JumpPower",
@@ -59,16 +59,16 @@ local Input = PlayerTab:CreateInput({
    end,
 })
 
-local BotTab = Window:CreateTab("Bot", "bot") -- Title, Image
+local BotTab = Window:CreateTab("NPC", "bot") -- Title, Image
 
-local Section = BotTab:CreateSection("Setting")
+local BotSection = BotTab:CreateSection("Setting")
 
-local Paragraph = Tab:CreateParagraph({Title = "Paragraph Example", Content = "To change bot's WalkSpeed/JumpPower/Quantity, go to the MM2 Aim Trainer's Bot setting to change!"})
+local BotParagraph = BotTab:CreateParagraph({Title = "Note", Content = "To change NPC's WalkSpeed/JumpPower/Amount, go to the MM2 Aim Trainer's NPC Settings to change!"})
 
-local Section = BotTab:CreateSection("Combat")
+local BotSection = BotTab:CreateSection("Combat")
 
-local Button = Tab:CreateButton({
-   Name = "Button Example",
+local Button = BotTab:CreateButton({
+   Name = "Kill NPC(s)",
    Callback = function()
    -- The command function to teleport to parts named "HumanoidRootPart"
 local function teleportToInnoParts()
