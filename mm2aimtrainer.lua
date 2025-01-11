@@ -59,10 +59,10 @@ local Input = PlayerTab:CreateInput({
    end,
 })
 
-local PlayerTab = Window:CreateTab("Bot", "bot") -- Title, Image
-local Section = PlayerTab:CreateSection("Settings")
+local BotTab = Window:CreateTab("Bot", "bot") -- Title, Image
+local Section = BotTab:CreateSection("Settings")
 
-local Input = Tab:CreateInput({
+local Input = BotTab:CreateInput({
    Name = "Bot's Walkspeed",
    CurrentValue = "",
    PlaceholderText = "Walkspeed",
@@ -88,7 +88,7 @@ local Input = Tab:CreateInput({
        end
    end,
 })
-local Input = Tab:CreateInput({
+local Input = BotTab:CreateInput({
    Name = "Input Example (JumpPower)",
    CurrentValue = "",
    PlaceholderText = "Input JumpPower",
@@ -115,7 +115,7 @@ local Input = Tab:CreateInput({
    end,
 })
 
-local Input = Tab:CreateInput({
+local Input = BotTab:CreateInput({
    Name = "Input Example (Innocents)",
    CurrentValue = "",
    PlaceholderText = "Input Innocents",
