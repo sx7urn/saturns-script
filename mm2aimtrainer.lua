@@ -60,84 +60,63 @@ local Input = PlayerTab:CreateInput({
 })
 
 local BotTab = Window:CreateTab("Bot", "bot") -- Title, Image
-local Section = BotTab:CreateSection("Settings")
 
-local Input = BotTab:CreateInput({
-   Name = "Bot's Walkspeed",
-   CurrentValue = "",
-   PlaceholderText = "Walkspeed",
-   RemoveTextAfterFocusLost = false,
-   Flag = "botwalkspeed",
-   Callback = function(Text)
-       local WalkSpeedValue = tonumber(Text)
+local Section = BotTab:CreateSection("Setting")
 
-       if WalkSpeedValue then
-           local args = {
-               [1] = game:GetService("Players").LocalPlayer:WaitForChild("Walkspeed"),
-               [2] = WalkSpeedValue
-           }
+local Paragraph = Tab:CreateParagraph({Title = "Paragraph Example", Content = "To change bot's WalkSpeed/JumpPower/Quantity, go to the MM2 Aim Trainer's Bot setting to change!"})
 
-           game:GetService("Players").LocalPlayer:WaitForChild("ChangeValue"):FireServer(unpack(args))
-       else
-           Rayfield:Notify({
-               Title = "Invalid Input",
-               Content = "Please enter a valid number.",
-               Duration = 6.5,
-               Image = "triangle-alert",
-           })
-       end
-   end,
-})
-local Input = BotTab:CreateInput({
-   Name = "Input Example (JumpPower)",
-   CurrentValue = "",
-   PlaceholderText = "Input JumpPower",
-   RemoveTextAfterFocusLost = false,
-   Flag = "Input1",
-   Callback = function(Text)
-       local JumpPowerValue = tonumber(Text)
+local Section = BotTab:CreateSection("Combat")
 
-       if JumpPowerValue then
-           local args = {
-               [1] = game:GetService("Players").LocalPlayer:WaitForChild("JumpPower"),
-               [2] = JumpPowerValue
-           }
+local Button = Tab:CreateButton({
+   Name = "Button Example",
+   Callback = function()
+   -- The command function to teleport to parts named "HumanoidRootPart"
+local function teleportToInnoParts()
+    local partName = "HumanoidRootPart" -- We are looking for parts named "HumanoidRootPart"
+    local partsToTeleport = {}  -- Store the parts that match the name
 
-           game:GetService("Players").LocalPlayer:WaitForChild("ChangeValue"):FireServer(unpack(args))
-       else
-           Rayfield:Notify({
-               Title = "Invalid Input",
-               Content = "Please enter a valid number for JumpPower.",
-               Duration = 6.5,
-               Image = "triangle-alert",
-           })
-       end
-   end,
-})
+    -- Collect all parts named "HumanoidRootPart"
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v.Name:lower() == partName:lower() and v:IsA("BasePart") then
+            table.insert(partsToTeleport, v)
+        end
+    end
 
-local Input = BotTab:CreateInput({
-   Name = "Input Example (Innocents)",
-   CurrentValue = "",
-   PlaceholderText = "Input Innocents",
-   RemoveTextAfterFocusLost = false,
-   Flag = "Input1",
-   Callback = function(Text)
-       local InnocentsValue = tonumber(Text)
+    -- If no parts are found, notify the user
+    if #partsToTeleport == 0 then
+        player:SendNotification({Title = "Error", Text = "No parts named 'HumanoidRootPart' found!"})
+        return
+    end
 
-       if InnocentsValue then
-           local args = {
-               [1] = game:GetService("Players").LocalPlayer:WaitForChild("Innocents"),
-               [2] = InnocentsValue
-           }
+    -- Check if the player is seated and stand them up if needed
+    local humanoid = player.Character and player.Character:FindFirstChildOfClass('Humanoid')
+    if humanoid and humanoid.SeatPart then
+        humanoid.Sit = false
+        wait(0.1)  -- Short wait to allow the player to stand
+    end
 
-           game:GetService("Players").LocalPlayer:WaitForChild("ChangeValue"):FireServer(unpack(args))
-       else
-           Rayfield:Notify({
-               Title = "Invalid Input",
-               Content = "Please enter a valid number for Innocents.",
-               Duration = 6.5,
-               Image = "triangle-alert",
-           })
-       end
+    -- Start an infinite loop to teleport the player continuously
+    while true do
+        for _, part in pairs(partsToTeleport) do
+            wait(0.1)  -- Wait before teleporting to the next part
+            local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if root then
+                root.CFrame = part.CFrame
+            end
+        end
+    end
+end
+
+-- The function that fires the server event before teleporting
+local function fireServerEvent()
+    while true do
+        local args = {
+            [1] = 1
+        }
+
+        game:GetService("Players").LocalPlayer.Character.Knife.KnifeServer.SlashStart:FireServer(unpack(args))
+        wait(0.1)
+    end
+         end
    end,
 })
