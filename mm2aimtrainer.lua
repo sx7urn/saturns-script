@@ -2,7 +2,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "MM2 Aim Trainer",
-   Icon = "sword", -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
+   Icon = 83578070161806, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
    LoadingTitle = "MM2 Aim Trainer",
    LoadingSubtitle = "by @sx7urn",
    Theme = "Default", -- Check https://docs.sirius.menu/rayfield/configuration/themes
@@ -60,10 +60,9 @@ local PlayerInput = PlayerTab:CreateInput({
 })
 
 local BotTab = Window:CreateTab("NPC", "bot") -- Title, Image
-
 local BotSection = BotTab:CreateSection("Setting")
 
-local BotParagraph = BotTab:CreateParagraph({Title = "Note", Content = "To change NPC's WalkSpeed/JumpPower/Amount, go to the MM2 Aim Trainer's NPC Settings to change!"})
+local BotParagraph = BotTab:CreateParagraph({Title = "Note", Content = "To change NPC's WalkSpeed/JumpPower/Amount, go to the MM2 Aim Trainer's 'NPC Settings' to change! Maybe I'll try to figure how to change the values from the hub idk.."})
 
 local BotSection = BotTab:CreateSection("Combat")
 
@@ -145,11 +144,198 @@ local Button = BotTab:CreateButton({
    Content = "KnifeServer or SlashStart event not found in knife!",
    Duration = 6.5,
    Image = "triangle-alert",
-})
-        end
-
-        -- Run both functions
+                  
         task.spawn(teleportToInnoParts)
         task.spawn(fireServerEvent)
     end,
 })
+
+local BotParagraph = BotTab:CreateParagraph({Title = "Note", Content = "Shoot NPC will be in future update (possibly)?"})
+
+local FarmTab = Window:CreateTab("Auto Farm", "swords") -- Title, Image
+local BotSection = FarmTab:CreateSection("Kill Farm")
+
+local Toggle = FarmTab:CreateToggle({
+    Name = "Toggle Example",
+    CurrentValue = false,
+    Flag = "Toggle1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+    Callback = function(Value)
+        -- This is triggered when the toggle is changed
+        if Value then
+            -- If the toggle is enabled, start the functions
+            task.spawn(function()
+                teleportToInnoParts()
+            end)
+
+            task.spawn(function()
+                fireServerEvent()
+            end)
+        else
+            -- If the toggle is disabled, stop the loops or any running tasks
+            -- You can use a flag to check whether the functions should still run or not.
+            stopLoop()
+        end
+    end,
+})
+
+-- Define the teleportToInnoParts function
+local player = game:GetService("Players").LocalPlayer
+
+local function teleportToInnoParts()
+    local partName = "HumanoidRootPart"
+    local partsToTeleport = {}
+
+    -- Collect all "HumanoidRootPart" from NPCs in the workspace
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v.Name:lower() == partName:lower() and v:IsA("BasePart") then
+            table.insert(partsToTeleport, v)
+        end
+    end
+
+    if #partsToTeleport == 0 then
+        player:SendNotification({Title = "Error", Text = "No parts named 'HumanoidRootPart' found!"})
+        return
+    end
+
+    -- Ensure the player isn't seated
+    local humanoid = player.Character and player.Character:FindFirstChildOfClass('Humanoid')
+    if humanoid and humanoid.SeatPart then
+        humanoid.Sit = false
+        task.wait(0.1)
+    end
+
+    -- Continuous teleporting to NPCs
+    for _, part in pairs(partsToTeleport) do
+        task.wait(0.1)
+        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            root.CFrame = part.CFrame
+        end
+    end
+end
+
+-- Define the fireServerEvent function
+local function fireServerEvent()
+    -- Retrieve the equipped knife value dynamically
+    local equippedKnifeName = player:FindFirstChild("EquippedKnife") and player.EquippedKnife.Value
+    if not equippedKnifeName then
+        warn("EquippedKnife StringValue not found or has no value!")
+        return
+    end
+    
+    local knife = player.Character:FindFirstChild(equippedKnifeName)
+    if not knife then
+        warn("Knife tool not found in character!")
+        return
+    end
+    
+    local knifeServer = knife:FindFirstChild("KnifeServer")
+    if knifeServer and knifeServer:FindFirstChild("SlashStart") then
+        while true do
+            local args = {[1] = 1}
+
+            local success, err = pcall(function()
+                knifeServer.SlashStart:FireServer(unpack(args))
+            end)
+            if not success then
+                Rayfield:Notify(
+                Title = "Error",
+                Content = "Error firing server event: " .. tostring(err),
+                Duration = 6.5,
+                Image = "triangle-alert",
+             })
+            end
+            task.wait(0.1)
+        end
+    else
+        Rayfield:Notify({
+            Title = "KnifeServer or SlashStart not found.",
+            Content = "KnifeServer or SlashStart event not found in knife!",
+            Duration = 6.5,
+            Image = "triangle-alert",
+        })
+    end
+end
+
+-- Add a function to stop the loops when the toggle is off
+local isRunning = true
+
+local function stopLoop()
+    isRunning = false
+end
+
+-- Modify the teleport and server event functions to check `isRunning`
+local function teleportToInnoParts()
+    while isRunning do
+        -- Same teleport logic as before
+        local partName = "HumanoidRootPart"
+        local partsToTeleport = {}
+
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v.Name:lower() == partName:lower() and v:IsA("BasePart") then
+                table.insert(partsToTeleport, v)
+            end
+        end
+
+        if #partsToTeleport == 0 then
+            player:SendNotification({Title = "Error", Text = "No parts named 'HumanoidRootPart' found!"})
+            return
+        end
+
+        local humanoid = player.Character and player.Character:FindFirstChildOfClass('Humanoid')
+        if humanoid and humanoid.SeatPart then
+            humanoid.Sit = false
+            task.wait(0.1)
+        end
+
+        for _, part in pairs(partsToTeleport) do
+            task.wait(0.1)
+            local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if root then
+                root.CFrame = part.CFrame
+            end
+        end
+    end
+end
+
+local function fireServerEvent()
+    while isRunning do
+        -- Same server event logic as before
+        local equippedKnifeName = player:FindFirstChild("EquippedKnife") and player.EquippedKnife.Value
+        if not equippedKnifeName then
+            warn("EquippedKnife StringValue not found or has no value!")
+            return
+        end
+
+        local knife = player.Character:FindFirstChild(equippedKnifeName)
+        if not knife then
+            warn("Knife tool not found in character!")
+            return
+        end
+
+        local knifeServer = knife:FindFirstChild("KnifeServer")
+        if knifeServer and knifeServer:FindFirstChild("SlashStart") then
+            local args = {[1] = 1}
+
+            local success, err = pcall(function()
+                knifeServer.SlashStart:FireServer(unpack(args))
+            end)
+            if not success then
+                Rayfield:Notify(
+                Title = "Error",
+                Content = "Error firing server event: " .. tostring(err),
+                Duration = 6.5,
+                Image = "triangle-alert",
+             })
+            end
+            task.wait(0.1)
+        else
+            Rayfield:Notify({
+                Title = "KnifeServer or SlashStart not found.",
+                Content = "KnifeServer or SlashStart event not found in knife!",
+                Duration = 6.5,
+                Image = "triangle-alert",
+            })
+        end
+    end
+   end
