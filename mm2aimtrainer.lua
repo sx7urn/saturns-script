@@ -86,56 +86,64 @@ local Button = BotTab:CreateButton({
         -- Set teleporting to true to prevent multiple clicks
         teleporting = true
 
-        -- Teleport function
-        local function teleportToInnoParts()
+        -- Teleport function (renamed to tptonpc)
+        local function tptonpc()
             local partName = "HumanoidRootPart"
-            local partsToTeleport = {}
+            local rigsFolder = workspace:FindFirstChild("Rigs")  -- Find the "Rigs" folder in workspace
 
-            -- Collect all "HumanoidRootPart" from NPCs in the workspace
-            for _, v in pairs(workspace:GetDescendants()) do
-                if v.Name:lower() == partName:lower() and v:IsA("BasePart") then
-                    table.insert(partsToTeleport, v)
+            -- Continuous teleporting until no parts are left in the "Rigs" folder
+            while teleporting do
+                -- Check if the "Rigs" folder exists
+                if rigsFolder then
+                    local partsToTeleport = {}
+
+                    -- Collect all "HumanoidRootPart" from NPCs in the "Rigs" folder
+                    for _, v in pairs(rigsFolder:GetDescendants()) do
+                        if v.Name:lower() == partName:lower() and v:IsA("BasePart") then
+                            table.insert(partsToTeleport, v)
+                        end
+                    end
+
+                    -- If no parts found, stop the loop
+                    if #partsToTeleport == 0 then
+                        Rayfield:Notify({
+                            Title = "Teleport Complete",
+                            Content = "No NPCs left in the Rigs folder.",
+                            Duration = 6.5,
+                            Image = "rewind",
+                        })
+                        teleporting = false  -- Stop teleporting
+                        break
+                    end
+
+                    -- Ensure the player isn't seated
+                    local humanoid = player.Character and player.Character:FindFirstChildOfClass('Humanoid')
+                    if humanoid and humanoid.SeatPart then
+                        humanoid.Sit = false
+                        task.wait(0.1)
+                    end
+
+                    -- Teleport to the first NPC part
+                    local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                    if root then
+                        root.CFrame = partsToTeleport[1].CFrame  -- Teleport to the first part
+                        table.remove(partsToTeleport, 1)  -- Remove the teleported part
+                    end
+
+                else
+                    -- If "Rigs" folder doesn't exist, stop the loop
+                    Rayfield:Notify({
+                        Title = "Error",
+                        Content = "'Rigs' folder not found in workspace!",
+                        Duration = 6.5,
+                        Image = "rewind",
+                    })
+                    teleporting = false
+                    break
                 end
-            end
 
-            if #partsToTeleport == 0 then
-                Rayfield:Notify({
-                    Title = "Error",
-                    Content = "No parts named 'HumanoidRootPart' found!",
-                    Duration = 6.5,
-                    Image = "rewind",
-                })
-                teleporting = false
-                return
+                task.wait(0.1)  -- Small delay before checking again
             end
-
-            -- Ensure the player isn't seated
-            local humanoid = player.Character and player.Character:FindFirstChildOfClass('Humanoid')
-            if humanoid and humanoid.SeatPart then
-                humanoid.Sit = false
-                task.wait(0.1)
-            end
-
-            -- Continuous teleporting to NPCs
-            while #partsToTeleport > 0 and teleporting do
-                task.wait(0.1)
-                local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                if root then
-                    root.CFrame = partsToTeleport[1].CFrame  -- Teleport to the first part
-                    table.remove(partsToTeleport, 1)  -- Remove the teleported part
-                end
-            end
-
-            -- End teleporting when all parts are done
-            if #partsToTeleport == 0 then
-                Rayfield:Notify({
-                    Title = "Teleport Complete",
-                    Content = "All NPCs have been teleported to.",
-                    Duration = 6.5,
-                    Image = "rewind",
-                })
-            end
-            teleporting = false
         end
 
         -- Server event firing
@@ -194,7 +202,7 @@ local Button = BotTab:CreateButton({
         end
 
         -- Run both functions
-        task.spawn(teleportToInnoParts)
+        task.spawn(tptonpc)  -- Call the renamed teleport function
         task.spawn(fireServerEvent)
     end,
 })
@@ -203,3 +211,4 @@ local BotParagraph = BotTab:CreateParagraph({Title = "Note", Content = "Shoot NP
 
 local FarmTab = Window:CreateTab("Auto Farm", "swords") -- Title, Image
 local FarmSection = FarmTab:CreateSection("Kill Farm")
+
