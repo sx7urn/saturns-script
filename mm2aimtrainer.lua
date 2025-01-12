@@ -2,7 +2,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "MM2 Aim Trainer",
-   Icon = 83578070161806, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
+   Icon = 83743101455769, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
    LoadingTitle = "MM2 Aim Trainer",
    LoadingSubtitle = "by @sx7urn",
    Theme = "Default", -- Check https://docs.sirius.menu/rayfield/configuration/themes
